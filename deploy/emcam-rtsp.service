@@ -4,6 +4,7 @@ After=network.target
 RequiresMountsFor=/mnt/usbdrive
 
 [Service]
+Environment=PYTHONUNBUFFERED=1
 Type=simple
 User=<pi-user>
 WorkingDirectory=/home/<pi-user>/Naturebytes/Scripts
