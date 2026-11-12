@@ -131,6 +131,8 @@ VMD_DIFF_THRESHOLD = 25          # 0-255, per-pixel grayscale difference to coun
 VMD_MIN_CONTOUR_AREA = 60        # px^2 in the downscaled frame; rejects small noise blobs
 VMD_EVENT_BUFFER_SECONDS = 5     # how long detected-motion timestamps are retained
 CORRELATION_WINDOW_SECONDS = 1.5 # +/- window around a PIR trigger to look for a corroborating VMD event
+VMD_IGNORE_TOP_FRACTION = 0.40  # top part of the frame is background (far trees, bushes); motion there is ignored
+VMD_ROI_TOP_ROW = int(round(VMD_HEIGHT * VMD_IGNORE_TOP_FRACTION))  # first analysed row of the VMD frame
 
 # Day/night boundary via sunrise/sunset (VMD confirmation only applies during the day)
 LATITUDE = 0.0                       # <-- set to your location
@@ -342,6 +344,8 @@ authInternalUsers:
         frame_size = VMD_WIDTH * VMD_HEIGHT
         buf = b""
         prev_frame = None
+        max_area_seen = 0          # largest moving area since the last report, in px^2
+        last_area_report = time.time()
 
         while self.vmd_reader_running:
             try:
@@ -359,13 +363,16 @@ authInternalUsers:
             frame = np.frombuffer(buf, dtype=np.uint8).reshape((VMD_HEIGHT, VMD_WIDTH))
             buf = b""
 
+            # Analyse only the lower part of the frame; the top band is background
+            roi = frame[VMD_ROI_TOP_ROW:]
+
             if prev_frame is not None:
                 try:
                     # Compensate for a global brightness/exposure shift between
                     # frames (e.g. auto-exposure reacting to a cloud) before
                     # differencing, so that shift alone isn't read as motion.
-                    mean_shift = float(frame.mean()) - float(prev_frame.mean())
-                    adjusted = frame.astype(np.int16) - int(round(mean_shift))
+                    mean_shift = float(roi.mean()) - float(prev_frame.mean())
+                    adjusted = roi.astype(np.int16) - int(round(mean_shift))
                     adjusted = np.clip(adjusted, 0, 255).astype(np.uint8)
 
                     diff = cv2.absdiff(adjusted, prev_frame)
@@ -373,7 +380,15 @@ authInternalUsers:
                     thresh = cv2.dilate(thresh, None, iterations=2)
                     contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-                    if any(cv2.contourArea(c) >= VMD_MIN_CONTOUR_AREA for c in contours):
+                    largest = max((cv2.contourArea(c) for c in contours), default=0)
+                    max_area_seen = max(max_area_seen, largest)
+                    if time.time() - last_area_report >= 60:
+                        print(f"[VMD] largest moving area in last 60s: {int(max_area_seen)} px^2 "
+                              f"(confirm threshold {VMD_MIN_CONTOUR_AREA} px^2)")
+                        max_area_seen = 0
+                        last_area_report = time.time()
+
+                    if largest >= VMD_MIN_CONTOUR_AREA:
                         now = time.time()
                         with self.vmd_lock:
                             self.vmd_events.append(now)
@@ -383,7 +398,7 @@ authInternalUsers:
                 except Exception as e:
                     print(f"WARNING: VMD frame analysis error: {e}")
 
-            prev_frame = frame
+            prev_frame = roi
 
     def _vmd_confirms(self, trigger_time):
         """True if a VMD motion event was recorded within CORRELATION_WINDOW_SECONDS
