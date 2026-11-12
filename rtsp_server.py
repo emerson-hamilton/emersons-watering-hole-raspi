@@ -64,7 +64,7 @@ VIDEO_BITRATE = 3000000  # 3 Mbps
 
 # Authentication settings
 RTSP_USERNAME = "admin"
-RTSP_PASSWORD = "<rotated-password>"
+RTSP_PASSWORD = os.environ["RTSP_PASSWORD"]
 
 # PIR / motion capture settings
 PIR_GPIO_PIN = 27                       # BCM pin number
@@ -674,7 +674,7 @@ authInternalUsers:
             print(f"Bitrate: {VIDEO_BITRATE/1000000}Mbps")
             print(f"\nStream URL: rtsp://{pi_ip}:{RTSP_PORT}/{RTSP_PATH}")
             print(f"Username: {RTSP_USERNAME}")
-            print(f"Password: {RTSP_PASSWORD}")
+            print(f"Password: <*********>")
             print("\nPress Ctrl+C to stop...\n")
 
             # Create config file
@@ -728,7 +728,7 @@ authInternalUsers:
             print(f"\nConnect from Synology to:")
             print(f"  URL: rtsp://{pi_ip}:{RTSP_PORT}/{RTSP_PATH}")
             print(f"  Username: {RTSP_USERNAME}")
-            print(f"  Password: {RTSP_PASSWORD}")
+            print(f"  Password: <*********>")
             if self.motion_sensor:
                 print(f"\nWatching for motion on GPIO {PIR_GPIO_PIN}...")
             if VMD_ENABLED and self.vmd_functional:
@@ -898,7 +898,7 @@ def print_setup_instructions(pi_ip):
     print(f"   - Model: Select any RTSP-compatible model")
     print(f"   - RTSP URL: rtsp://{pi_ip}:{RTSP_PORT}/{RTSP_PATH}")
     print(f"   - Username: {RTSP_USERNAME}")
-    print(f"   - Password: {RTSP_PASSWORD}")
+    print(f"   - Password: <********>")
     print("\n3. Click 'Test Connection' to verify")
     print("4. Complete the setup and start recording")
     print("\nNOTE: The first connection may take a few seconds")
