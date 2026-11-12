@@ -109,7 +109,7 @@ OVERLAY_ENABLED = True
 OVERLAY_BAR_HEIGHT = 60                  # px, height of the semi-transparent bar
 OVERLAY_BAR_COLOR = (0, 0, 0)            # RGB, black
 OVERLAY_BAR_OPACITY = 128                # 0-255, 128 = ~50% opacity
-OVERLAY_ICON_PATH = "/home/<pi-user>/Naturebytes/Scripts/img/pawprints_60x60.png"
+OVERLAY_ICON_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "img", "pawprints_60x60.png")  # next to this script
 OVERLAY_ICON_SIZE = 60                   # px, expected to match OVERLAY_BAR_HEIGHT
 OVERLAY_ICON_LEFT_MARGIN = 10            # px, gap between frame edge and icon
 OVERLAY_TEXT_LEFT = "Emerson's Wildlife Cam"
