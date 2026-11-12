@@ -1,0 +1,11 @@
+[Unit]
+Description=Sync PIR motion captures to remote gallery server
+RequiresMountsFor=/mnt/usbdrive
+
+[Service]
+Type=oneshot
+User=<pi-user>
+ExecStart=/home/<pi-user>/Naturebytes/Scripts/sync_photos.sh
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=emcam-sync

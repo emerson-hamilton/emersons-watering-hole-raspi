@@ -1,0 +1,18 @@
+[Unit]
+Description=Emerson Raspberry Pi Camera RTSP Server
+After=network.target
+RequiresMountsFor=/mnt/usbdrive
+
+[Service]
+Type=simple
+User=<pi-user>
+WorkingDirectory=/home/<pi-user>/Naturebytes/Scripts
+ExecStart=/usr/bin/python3 /home/<pi-user>/Naturebytes/Scripts/rtsp_server.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=emcam-rtsp
+
+[Install]
+WantedBy=multi-user.target
